@@ -1,7 +1,9 @@
 import random
-from typing import Union
+from typing import Union, Optional, Type
 
+from abstract.abstract_effect import AbstractEffectType
 from abstract.abstract_maze import BaseCell, AbstractMaze, AbstractMazeGame
+from effects import FactoryEffects
 
 
 class Cell(BaseCell):
@@ -28,7 +30,7 @@ class Cell(BaseCell):
             'left': True,
         }
         self.visited = False  # посещена ли клетка
-        self.effect = []
+        self.effects = []
 
     def remove_walls(self, *args) -> None:
         """
@@ -44,6 +46,10 @@ class Cell(BaseCell):
         for wall in args:
             if wall in self._walls:
                 self._walls[wall] = False
+
+    @property
+    def walls(self):
+        return self._walls
 
     def __repr__(self) -> str:
         """
@@ -150,11 +156,7 @@ class Maze(AbstractMaze):
                 Cell - случайная соседняя клетка.
         """
         # Получение верхней, правой, нижней, левой клетки
-        top = self.check_cell(self._current_cell.x, self._current_cell.y - 1)
-        right = self.check_cell(self._current_cell.x + 1, self._current_cell.y)
-        bottom = self.check_cell(self._current_cell.x,
-                                 self._current_cell.y + 1)
-        left = self.check_cell(self._current_cell.x - 1, self._current_cell.y)
+        bottom, left, right, top = self.get_neighbors()
 
         neighbors = []
         if top and not top.visited:
@@ -168,6 +170,28 @@ class Maze(AbstractMaze):
 
         # Возвращаем случайную соседнюю клетку, если такой клетки нет, то False
         return random.choice(neighbors) if neighbors else False
+
+    def get_neighbors(self) -> dict:
+        """
+        Возвращает словарь с клетками.
+
+        Если клетки не существует, она будет False.
+
+        Returns:
+            dict: (словарь с клетками).
+        """
+        top = self.check_cell(self._current_cell.x, self._current_cell.y - 1)
+        right = self.check_cell(self._current_cell.x + 1, self._current_cell.y)
+        bottom = self.check_cell(self._current_cell.x,
+                                 self._current_cell.y + 1)
+        left = self.check_cell(self._current_cell.x - 1, self._current_cell.y)
+
+        return {
+            'top': top,
+            'right': right,
+            'left': left,
+            'bottom': bottom,
+        }
 
     def remove_walls(self, next_cell: Cell) -> None:
         """
@@ -203,7 +227,7 @@ class Maze(AbstractMaze):
 
     def check_exist_not_visited_cell(self) -> bool:
         """
-        Проверяет есть ли в лабиринте не посещённые вершины.
+        Проверяет есть ли в лабиринте не посещённые клетки.
 
         Returns:
             bool:
@@ -222,6 +246,10 @@ class Maze(AbstractMaze):
     @current_cell.setter
     def current_cell(self, cell: Cell):
         self._current_cell = cell
+
+    @property
+    def maze(self):
+        return self._maze
 
 
 class MazeGame(AbstractMazeGame):
@@ -278,6 +306,198 @@ class MazeGame(AbstractMazeGame):
                 cell = _last_cell.pop()
                 maze.current_cell = cell
 
+    def arrange_effects(self,
+                        amount: int,
+                        repeat: bool = True,
+                        effect_types: list[
+                            Optional[Type[AbstractEffectType]]] = None,
+                        win: bool = True,
+                        ) -> None:
+        """
+        Проставляет указанное количество эффектов на случайные клетки.
+
+        Args:
+            amount: int (количество эффектов)
+            repeat: bool (может ли быть несколько эффектов на одной клетке)
+            effect_types: list[Optional[AbstractEffectType]] (использовать
+            только эффекты из указанных категорий)
+            win: bool (добавить эффект победы в лабиринте)
+        """
+        current_cell = self.__maze.current_cell
+        all_cells = self.__maze.maze.copy()
+        if effect_types:
+            effects = FactoryEffects.get_effects_by_type(effect_types)
+        else:
+            effects = FactoryEffects.get_effects()
+        i = 0
+        while i < amount:
+            cell = random.choice(all_cells)
+            if abs(current_cell.x - cell.x) > 2 or abs(
+                    current_cell.y - cell.y) > 2:
+                effect = random.choice(effects)
+                if effect in cell.effects:
+                    continue
+                cell.effects.append(effect)
+                if not repeat:
+                    all_cells.remove(cell)
+                i += 1
+            else:
+                all_cells.remove(cell)
+        if win:
+            all_cells = self.__maze.maze.copy()
+            while all_cells:
+                cell = random.choice(all_cells)
+                if abs(current_cell.x - cell.x) > 3 and abs(
+                        current_cell.y - cell.y) > 3 and not cell.effects:
+                    cell.effects.append(FactoryEffects.get_win_effect())
+                    break
+                all_cells.remove(cell)
+
+    def check_move_forward(self) -> Union[bool, BaseCell]:
+        """
+        Проверка возможности движения вперёд.
+
+        Можно двигаться если клетка существует, и между ними нет стены.
+
+        Returns:
+            BaseCell: проверяемая клетка
+            bool:
+                False - двигаться нельзя
+        """
+        return self._check_move('top')
+
+    def check_move_right(self) -> Union[bool, BaseCell]:
+        """
+        Проверка возможности движения вправо.
+
+        Можно двигаться если клетка существует, и между ними нет стены.
+
+        Returns:
+            BaseCell: проверяемая клетка
+            bool:
+                False - двигаться нельзя
+        """
+        return self._check_move('right')
+
+    def check_move_back(self) -> Union[bool, BaseCell]:
+        """
+        Проверка возможности движения вниз.
+
+        Можно двигаться если клетка существует, и между ними нет стены.
+
+        Returns:
+            BaseCell: проверяемая клетка
+            bool:
+                False - двигаться нельзя
+        """
+        return self._check_move('bottom')
+
+    def check_move_left(self) -> Union[bool, BaseCell]:
+        """
+        Проверка возможности движения влево.
+
+        Можно двигаться если клетка существует, и между ними нет стены.
+
+        Returns:
+            BaseCell: проверяемая клетка
+            bool:
+                False - двигаться нельзя
+        """
+        return self._check_move('left')
+
+    def _check_move(self, direction: str) -> Union[bool, BaseCell]:
+        """
+        Проверка возможности движения в указанную сторону.
+
+        Можно двигаться если клетка существует, и между ними нет стены.
+
+        Args:
+            direction: str (сторона, может быть: top, right, bottom, left)
+
+        Returns:
+            BaseCell: проверяемая клетка
+            bool:
+                False - двигаться нельзя
+        """
+        cell = self.__maze.get_neighbors()[direction]
+        if not (cell.walls.get(direction, True) or
+                self.__maze.current_cell.walls.get(direction, True)):
+            return cell
+        return False
+
+    def move_forward(self) -> Union[bool, BaseCell]:
+        """
+        Движение вперёд.
+
+        Перед движением проверяет, можно ли двигаться.
+
+        Returns:
+            BaseCell: клетка на которую переместились
+            bool:
+                False - движения не произошло
+        """
+        return self._move('top')
+
+    def move_right(self) -> Union[bool, BaseCell]:
+        """
+        Движение вправо.
+
+        Перед движением проверяет, можно ли двигаться.
+
+        Returns:
+            BaseCell: клетка на которую переместились
+            bool:
+                False - движения не произошло
+        """
+        return self._move('right')
+
+    def move_bottom(self) -> Union[bool, BaseCell]:
+        """
+        Движение вниз.
+
+        Перед движением проверяет, можно ли двигаться.
+
+        Returns:
+            BaseCell: клетка на которую переместились
+            bool:
+                False - движения не произошло
+        """
+        return self._move('bottom')
+
+    def move_left(self) -> Union[bool, BaseCell]:
+        """
+        Движение влево.
+
+        Перед движением проверяет, можно ли двигаться.
+
+        Returns:
+            BaseCell: клетка на которую переместились
+            bool:
+                False - движения не произошло
+        """
+        return self._move('left')
+
+    def _move(self, direction: str) -> Union[bool, BaseCell]:
+        """
+        Позволяет двигаться на соседнюю клетку.
+
+        Перед движением проверяет, можно ли двигаться.
+        Для проверки используется _check_move.
+
+        Args:
+            direction: str (сторона, может быть: top, right, bottom, left)
+
+        Returns:
+            BaseCell: клетка на которую переместились
+            bool:
+                False - движения не произошло
+        """
+        if self.check_move_forward():
+            forward_cell = self.__maze.get_neighbors()[direction]
+            self.__maze.current_cell = forward_cell
+            return forward_cell
+        return False
+
     def get_maze(self) -> Maze:
         """
         Возвращает объект Maze.
@@ -288,7 +508,9 @@ class MazeGame(AbstractMazeGame):
         return self.__maze
 
 
-maze = MazeGame(6)
+maze = MazeGame(9)
 maze.generate_maze()
+maze.arrange_effects(10)
 for i in maze._MazeGame__maze._maze:
-    print(i._walls)
+    if i.effects:
+        print(i, i.effects)

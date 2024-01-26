@@ -9,6 +9,7 @@ class BaseCell(ABC):
     x: int  # Положение клетки по X
     y: int  # Положение клетки по Y
     visited: bool  # Посещённость клетки
+    effects: list  # Эффекты клетки
 
 
 class AbstractMaze(ABC):
