@@ -1,9 +1,9 @@
 import random
 from typing import Union, Optional, Type
 
-from abstract.abstract_effect import AbstractEffectType
-from abstract.abstract_maze import BaseCell, AbstractMaze, AbstractMazeGame
-from effects import FactoryEffects
+from game.abstract.abstract_effect import AbstractEffectType
+from game.abstract.abstract_maze import BaseCell, AbstractMaze, AbstractMazeGame
+from game.effects import FactoryEffects
 
 
 class Cell(BaseCell):
@@ -93,7 +93,7 @@ class Maze(AbstractMaze):
     # которой сейчас находится пользователь.
     _current_cell = None
 
-    def __init__(self, maze_size: int):
+    def __init__(self, maze_size: int, *args, **kwargs):
         self.maze_size = maze_size  # Размер лабиринта
 
     def generate(self) -> None:
@@ -156,9 +156,13 @@ class Maze(AbstractMaze):
                 Cell - случайная соседняя клетка.
         """
         # Получение верхней, правой, нижней, левой клетки
-        bottom, left, right, top = self.get_neighbors()
+        all_neighbors = self.get_neighbors()
 
         neighbors = []
+        top = all_neighbors['top']
+        right = all_neighbors['right']
+        bottom = all_neighbors['bottom']
+        left = all_neighbors['left']
         if top and not top.visited:
             neighbors.append(top)
         if right and not right.visited:
@@ -238,6 +242,19 @@ class Maze(AbstractMaze):
             if not cell.visited:
                 return True
         return False
+
+    def copy(self) -> AbstractMaze:
+        """
+        Копирует лабиринт.
+
+        Возвращает точную копию лабиринта. Является прототипом
+
+        Returns:
+            AbstractMaze: новый лабиринт
+        """
+        new_obj = self.__class__(**self.__dict__)
+        new_obj.__dict__.update(self.__dict__)
+        return new_obj
 
     @property
     def current_cell(self):
@@ -497,6 +514,17 @@ class MazeGame(AbstractMazeGame):
             self.__maze.current_cell = forward_cell
             return forward_cell
         return False
+
+    def copy_maze(self) -> AbstractMaze:
+        """
+        Копирует лабиринт.
+
+        Возвращает точную копию текущего лабиринта.
+
+        Returns:
+             AbstractMaze: созданный лабиринт.
+        """
+        return self.__maze.copy()
 
     def get_maze(self) -> Maze:
         """

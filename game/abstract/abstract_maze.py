@@ -46,6 +46,18 @@ class AbstractMaze(ABC):
         """
         pass
 
+    @abstractmethod
+    def copy(self) -> 'AbstractMaze':
+        """
+        Копирует лабиринт.
+
+        Возвращает точную копию лабиринта. Является прототипом.
+
+        Returns:
+            AbstractMaze: новый лабиринт
+        """
+        pass
+
 
 class AbstractMazeGame(ABC):
     @abstractmethod
@@ -61,3 +73,13 @@ class AbstractMazeGame(ABC):
         Получить объект лабиринта AbstractMaze.
         """
         pass
+
+    def copy_maze(self) -> AbstractMaze:
+        """
+        Копирует лабиринт.
+
+        Возвращает точную копию текущего лабиринта.
+
+        Returns:
+             AbstractMaze: созданный лабиринт.
+        """
