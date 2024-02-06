@@ -138,6 +138,24 @@ class AbstractRoom(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_start_time_participant(self,
+                                   participant_id: Union[int, str]
+                                   ) -> Union[bool, float]:
+        """
+        Возвращает время начала игры для указанного участника.
+        """
+        pass
+
+    @abstractmethod
+    def set_start_time_participant(self,
+                                   participant_id: Union[int, str],
+                                   time_start: float,
+                                   ) -> bool:
+        """
+        Устанавливает время начала игры для указанного участника.
+        """
+
 
 class AbstractRoomAggregator(ABC):
     """
@@ -194,6 +212,7 @@ class AbstractRoomAggregator(ABC):
         """
         pass
 
+    @abstractmethod
     def get_room_by_participant(self,
                                 participant_id: Union[int, str],
                                 ) -> Optional[str]:
@@ -202,6 +221,7 @@ class AbstractRoomAggregator(ABC):
         """
         pass
 
+    @abstractmethod
     def get_participant(self,
                         participant_id: Union[int, str]
                         ) -> Optional[dict]:
@@ -210,13 +230,32 @@ class AbstractRoomAggregator(ABC):
         """
         pass
 
+    @abstractmethod
     def get_participants(self,
-                            room_number: str,
-                            ) -> Optional[dict]:
+                         room_number: str,
+                         ) -> Optional[dict]:
         """
         Возвращает словарь всех участников комнаты
         """
         pass
+
+    @abstractmethod
+    def get_start_time_participant(self,
+                                   participant_id: Union[int, str]
+                                   ) -> Union[bool, float]:
+        """
+        Возвращает время начала игры для указанного участника.
+        """
+        pass
+
+    @abstractmethod
+    def set_start_time_participant(self,
+                                   participant_id: Union[int, str],
+                                   time_start: float,
+                                   ) -> bool:
+        """
+        Устанавливает время начала игры для указанного участника.
+        """
 
     def __new__(cls) -> 'AbstractRoomAggregator':
         """

@@ -1,8 +1,8 @@
 import random
 from typing import Union, Optional
 
-from database.abstract.abstract_room import AbstractRoom, \
-    AbstractRoomAggregator
+from database.abstract.abstract_room import (AbstractRoom,
+                                             AbstractRoomAggregator)
 from game.abstract.abstract_maze import AbstractMazeGame, BaseCell
 from game.maze import MazeGame
 
@@ -37,7 +37,8 @@ class Room(AbstractRoom):
             'previous_cells': [],
             'name': None,
             'last_name': None,
-            'maze': self.maze.copy(),
+            'maze': self.maze.copy_maze(),
+            'time_start': None,
         }
 
     def remove_participant(self, participant_id: Union[int, str]) -> None:
@@ -106,6 +107,49 @@ class Room(AbstractRoom):
         """
         if self.check_participants(participant_id):
             self.__participants[participant_id]['end_time'] = time_end
+            return True
+        return False
+
+    def get_start_time_participant(self,
+                                   participant_id: Union[int, str]
+                                   ) -> Union[bool, float]:
+        """
+        Возвращает время начала игры для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+
+        Returns:
+            float: время
+            bool:
+                False - не состоит в комнате
+        """
+        if self.check_participants(participant_id):
+            return self.__participants[participant_id]['start_time']
+        return False
+
+    def set_start_time_participant(self,
+                                   participant_id: Union[int, str],
+                                   time_start: float,
+                                   ) -> bool:
+        """
+        Устанавливает время начала игры для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+            time_start: float (время начала игры)
+
+        Returns:
+            bool:
+                True - время установлено
+                False - не состоит в комнате
+        """
+        if self.check_participants(participant_id):
+            self.__participants[participant_id]['start_time'] = time_start
             return True
         return False
 
@@ -400,3 +444,47 @@ class RoomAggregator(AbstractRoomAggregator):
         for room in self._rooms:
             if room.room_number == room_number:
                 return room.get_participants()
+
+    def get_start_time_participant(self,
+                                   participant_id: Union[int, str]
+                                   ) -> Union[bool, float]:
+        """
+        Возвращает время начала игры для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+
+        Returns:
+            float: время
+            bool:
+                False - не состоит в комнате
+        """
+        for room in self._rooms:
+            if room.check_participants(participant_id):
+                return room.get_start_time_participant()
+        return False
+
+    def set_start_time_participant(self,
+                                   participant_id: Union[int, str],
+                                   time_start: float,
+                                   ) -> bool:
+        """
+        Устанавливает время начала игры для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+            time_start: float (время начала игры)
+
+        Returns:
+            bool:
+                True - время установлено
+                False - не состоит в комнате
+        """
+        for room in self._rooms:
+            if room.check_participants(participant_id):
+                room.set_start_time_participant(participant_id, time_start)
+        return False
