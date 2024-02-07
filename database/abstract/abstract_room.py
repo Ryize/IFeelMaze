@@ -156,6 +156,35 @@ class AbstractRoom(ABC):
         Устанавливает время начала игры для указанного участника.
         """
 
+    @abstractmethod
+    def get_game_time_participant(self,
+                                  participant_id: Union[int, str]
+                                  ) -> Union[bool, float]:
+        """
+        Возвращает игровое время для указанного участника.
+        """
+        pass
+
+    @abstractmethod
+    def set_game_time_participant(self,
+                                  participant_id: Union[int, str],
+                                  time_: float,
+                                  ) -> bool:
+        """
+        Устанавливает игровое время для указанного участника.
+        """
+        pass
+
+    @abstractmethod
+    def add_game_time_participant(self,
+                                  participant_id: Union[int, str],
+                                  time_: float,
+                                  ) -> bool:
+        """
+        Добавляет игровое время для указанного участника.
+        """
+        pass
+
 
 class AbstractRoomAggregator(ABC):
     """
@@ -256,6 +285,35 @@ class AbstractRoomAggregator(ABC):
         """
         Устанавливает время начала игры для указанного участника.
         """
+
+    @abstractmethod
+    def get_game_time_participant(self,
+                                  participant_id: Union[int, str]
+                                  ) -> Union[bool, float]:
+        """
+        Возвращает игровое время для указанного участника.
+        """
+        pass
+
+    @abstractmethod
+    def set_game_time_participant(self,
+                                  participant_id: Union[int, str],
+                                  time_: float,
+                                  ) -> bool:
+        """
+        Устанавливает игровое время для указанного участника.
+        """
+        pass
+
+    @abstractmethod
+    def add_game_time_participant(self,
+                                  participant_id: Union[int, str],
+                                  time_: float,
+                                  ) -> bool:
+        """
+        Добавляет игровое время для указанного участника.
+        """
+        pass
 
     def __new__(cls) -> 'AbstractRoomAggregator':
         """

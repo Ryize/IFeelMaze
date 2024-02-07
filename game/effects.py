@@ -1,10 +1,12 @@
 from typing import Type
 
-from abstract.abstract_effect import (BaseEffect, AbstractEffectType,
-                                      AbstractEffect, AbstractFactoryEffects,
-                                      )
-from effect_type import (ReduceTimeRemainingEffectType,
-                         IncreasesEffectTypeCellCompletionTime, WinEffectType)
+from game.abstract.abstract_effect import (BaseEffect, AbstractEffectType,
+                                           AbstractEffect,
+                                           AbstractFactoryEffects,
+                                           )
+from game.effect_type import (ReduceTimeRemainingEffectType,
+                              IncreasesEffectTypeCellCompletionTime,
+                              WinEffectType)
 
 
 class HeatEffect(BaseEffect):

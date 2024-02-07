@@ -1,4 +1,4 @@
-from abstract.abstract_effect import AbstractEffectType
+from game.abstract.abstract_effect import AbstractEffectType
 
 
 class IncreasesEffectTypeCellCompletionTime(AbstractEffectType):
