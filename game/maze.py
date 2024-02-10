@@ -2,7 +2,8 @@ import random
 from typing import Union, Optional, Type
 
 from game.abstract.abstract_effect import AbstractEffectType
-from game.abstract.abstract_maze import BaseCell, AbstractMaze, AbstractMazeGame
+from game.abstract.abstract_maze import BaseCell, AbstractMaze, \
+    AbstractMazeGame
 from game.effects import FactoryEffects
 
 
@@ -29,7 +30,8 @@ class Cell(BaseCell):
             'bottom': True,
             'left': True,
         }
-        self.visited = False  # посещена ли клетка
+        self.visited = False  # посещена ли клетка при создании лабиринта
+        self.user_visited = False  # посещена ли игроком
         self.effects = []
 
     def remove_walls(self, *args) -> None:
@@ -281,7 +283,7 @@ class MazeGame(AbstractMazeGame):
         __maze: Maze (объект класса Maze)
     """
 
-    def __init__(self, maze_size: int = 16):
+    def __init__(self, maze_size: int = 5):
         """
         Args:
             maze_size: int (размер лабиринта по X и Y)
@@ -364,8 +366,8 @@ class MazeGame(AbstractMazeGame):
             all_cells = self.__maze.maze.copy()
             while all_cells:
                 cell = random.choice(all_cells)
-                if abs(current_cell.x - cell.x) > 3 and abs(
-                        current_cell.y - cell.y) > 3 and not cell.effects:
+                if abs(current_cell.x - cell.x) > 2 and abs(
+                        current_cell.y - cell.y) > 2 and not cell.effects:
                     cell.effects.append(FactoryEffects.get_win_effect())
                     break
                 all_cells.remove(cell)
@@ -437,9 +439,15 @@ class MazeGame(AbstractMazeGame):
                 False - двигаться нельзя
         """
         cell = self.__maze.get_neighbors()[direction]
-        if not (cell.walls.get(direction, True) or
-                self.__maze.current_cell.walls.get(direction, True)):
-            return cell
+        if not self.__maze.current_cell.walls.get(direction, True):
+            if direction == 'top' and not cell.walls.get('bottom', True):
+                return cell
+            if direction == 'right' and not cell.walls.get('left', True):
+                return cell
+            if direction == 'bottom' and not cell.walls.get('top', True):
+                return cell
+            if direction == 'left' and not cell.walls.get('right', True):
+                return cell
         return False
 
     def move_forward(self) -> Union[bool, BaseCell]:
@@ -509,7 +517,8 @@ class MazeGame(AbstractMazeGame):
             bool:
                 False - движения не произошло
         """
-        if self.check_move_forward():
+        if self._check_move(direction):
+            self.__maze.current_cell.user_visited = True
             forward_cell = self.__maze.get_neighbors()[direction]
             self.__maze.current_cell = forward_cell
             return forward_cell
@@ -535,10 +544,22 @@ class MazeGame(AbstractMazeGame):
         """
         return self.__maze
 
+    def set_maze(self, maze: AbstractMaze) -> None:
+        """
+        Устанавливает новый лабиринт.
 
-maze = MazeGame(9)
-maze.generate_maze()
-maze.arrange_effects(10)
-for i in maze._MazeGame__maze._maze:
-    if i.effects:
-        print(i, i.effects)
+        Если передан не AbstractMaze, вернет ошибку TypeError.
+
+        Args:
+            maze: AbstractMaze (новый лабиринт)
+        """
+        if not isinstance(maze, AbstractMaze):
+            raise TypeError('Передан не объект лабиринта!')
+        self.__maze = maze
+
+# maze = MazeGame(9)
+# maze.generate_maze()
+# maze.arrange_effects(10)
+# for i in maze._MazeGame__maze._maze:
+#     if i.effects:
+#         print(i, i.effects)

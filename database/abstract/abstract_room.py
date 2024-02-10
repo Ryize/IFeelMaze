@@ -315,6 +315,15 @@ class AbstractRoomAggregator(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_maze_by_participant_id(self,
+                                   participant_id: Union[int, str]
+                                   ) -> Optional[AbstractMazeGame]:
+        """
+        Возвращает игровой лабиринт для указанного участника.
+        """
+        pass
+
     def __new__(cls) -> 'AbstractRoomAggregator':
         """
         Singleton, тк агрегатор единый для всей системы.

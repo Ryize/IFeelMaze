@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, Optional, Type
+
+from game.abstract.abstract_effect import AbstractEffectType
 
 
 class BaseCell(ABC):
@@ -8,8 +10,14 @@ class BaseCell(ABC):
     """
     x: int  # Положение клетки по X
     y: int  # Положение клетки по Y
-    visited: bool  # Посещённость клетки
+    visited: bool  # Посещена ли клетка при создании лабиринта
+    user_visited: bool  # Посещена ли клетка игроков
     effects: list  # Эффекты клетки
+    _walls: dict  # Словарь наличия стен
+
+    @property
+    def walls(self):
+        return self._walls
 
 
 class AbstractMaze(ABC):
@@ -53,6 +61,21 @@ class AbstractMaze(ABC):
         """
         pass
 
+    @property
+    @abstractmethod
+    def current_cell(self) -> BaseCell:
+        pass
+
+    @current_cell.setter
+    @abstractmethod
+    def current_cell(self, cell: BaseCell):
+        pass
+
+    @property
+    @abstractmethod
+    def maze(self) -> list[BaseCell]:
+        pass
+
 
 class AbstractMazeGame(ABC):
     @abstractmethod
@@ -63,13 +86,91 @@ class AbstractMazeGame(ABC):
         pass
 
     @abstractmethod
+    def arrange_effects(self,
+                        amount: int,
+                        repeat: bool = True,
+                        effect_types: list[
+                            Optional[Type[AbstractEffectType]]] = None,
+                        win: bool = True,
+                        ) -> None:
+        """
+        Проставляет указанное количество эффектов на случайные клетки.
+        """
+        pass
+
+    @abstractmethod
     def get_maze(self) -> AbstractMaze:
         """
         Получить объект лабиринта AbstractMaze.
         """
         pass
 
+    @abstractmethod
+    def set_maze(self, value: AbstractMaze) -> None:
+        """
+        Устанавливает новый лабиринт.
+        """
+        pass
+
+    @abstractmethod
     def copy_maze(self) -> AbstractMaze:
         """
         Копирует лабиринт.
         """
+        pass
+
+    @abstractmethod
+    def move_forward(self) -> Union[bool, BaseCell]:
+        """
+        Движение вперёд.
+        """
+        pass
+
+    @abstractmethod
+    def move_right(self) -> Union[bool, BaseCell]:
+        """
+        Движение вправо.
+        """
+        pass
+
+    @abstractmethod
+    def move_bottom(self) -> Union[bool, BaseCell]:
+        """
+        Движение вниз.
+        """
+        pass
+
+    @abstractmethod
+    def move_left(self) -> Union[bool, BaseCell]:
+        """
+        Движение влево.
+        """
+        pass
+
+    @abstractmethod
+    def check_move_forward(self) -> Union[bool, BaseCell]:
+        """
+        Проверка возможности движения вперёд.
+        """
+        pass
+
+    @abstractmethod
+    def check_move_right(self) -> Union[bool, BaseCell]:
+        """
+        Проверка возможности движения вправо.
+        """
+        pass
+
+    @abstractmethod
+    def check_move_back(self) -> Union[bool, BaseCell]:
+        """
+        Проверка возможности движения вниз.
+        """
+        pass
+
+    @abstractmethod
+    def check_move_left(self) -> Union[bool, BaseCell]:
+        """
+        Проверка возможности движения влево.
+        """
+        pass
