@@ -39,6 +39,7 @@ class Room(AbstractRoom):
             'last_name': None,
             'maze': self.maze.copy_maze(),
             'time_start': None,
+            'game_time': None,
         }
 
     def remove_participant(self, participant_id: Union[int, str]) -> None:
@@ -150,6 +151,72 @@ class Room(AbstractRoom):
         """
         if self.check_participants(participant_id):
             self.__participants[participant_id]['start_time'] = time_start
+            return True
+        return False
+
+    def get_game_time_participant(self,
+                                  participant_id: Union[int, str]
+                                  ) -> Union[bool, float]:
+        """
+        Возвращает игровое время для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+
+        Returns:
+            float: игровое время
+            bool:
+                False - не состоит в комнате
+        """
+        if self.check_participants(participant_id):
+            return self.__participants[participant_id]['game_time']
+        return False
+
+    def set_game_time_participant(self,
+                                  participant_id: Union[int, str],
+                                  time_: float,
+                                  ) -> bool:
+        """
+        Устанавливает игровое время для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+            time_: float (игровое время)
+
+        Returns:
+            bool:
+                True - время установлено
+                False - не состоит в комнате
+        """
+        if self.check_participants(participant_id):
+            self.__participants[participant_id]['game_time'] = time_
+            return True
+        return False
+
+    def add_game_time_participant(self,
+                                  participant_id: Union[int, str],
+                                  time_: float,
+                                  ) -> bool:
+        """
+        Добавляет игровое время для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+            time_: float (игровое время)
+
+        Returns:
+            bool:
+                True - время добавлено
+                False - не состоит в комнате
+        """
+        if self.check_participants(participant_id):
+            self.__participants[participant_id]['game_time'] += time_
             return True
         return False
 
@@ -266,21 +333,17 @@ class Room(AbstractRoom):
             participant_id: Union[int, str] (номер участника)
 
         Returns:
-            None: участник не найден
             dict: словарь с данными
+            None: участник не найден
         """
         return self.__participants.get(participant_id)
 
-    def get_participants(self) -> Optional[dict]:
+    def get_participants(self) -> dict:
         """
         Возвращает идентификатор всех участников комнаты.
 
-        Args:
-            room_number: str (номер комнаты)
-
         Returns:
-            list: список идентификаторов участников
-            None: комната не найдена
+            dict: словарь с данными
         """
         return self.__participants
 
@@ -463,7 +526,7 @@ class RoomAggregator(AbstractRoomAggregator):
         """
         for room in self._rooms:
             if room.check_participants(participant_id):
-                return room.get_start_time_participant()
+                return room.get_start_time_participant(participant_id)
         return False
 
     def set_start_time_participant(self,
@@ -488,3 +551,98 @@ class RoomAggregator(AbstractRoomAggregator):
             if room.check_participants(participant_id):
                 room.set_start_time_participant(participant_id, time_start)
         return False
+
+    def get_game_time_participant(self,
+                                  participant_id: Union[int, str]
+                                  ) -> Union[bool, float]:
+        """
+        Возвращает игровое время для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+
+        Returns:
+            float: игровое время
+            bool:
+                False - не состоит в комнате
+        """
+        room = self.get_room(participant_id)
+        if room:
+            return room.get_game_time_participant(participant_id)
+        return False
+
+    def set_game_time_participant(self,
+                                  participant_id: Union[int, str],
+                                  time_: float,
+                                  ) -> bool:
+        """
+        Устанавливает игровое время для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+            time_: float (игровое время)
+
+        Returns:
+            bool:
+                True - время установлено
+                False - не состоит в комнате
+        """
+        room = self.get_room(participant_id)
+        if room:
+            self.set_game_time_participant(participant_id, time_)
+            return True
+        return False
+
+    def add_game_time_participant(self,
+                                  participant_id: Union[int, str],
+                                  time_: float,
+                                  ) -> bool:
+        """
+        Добавляет игровое время для указанного участника.
+
+        Если участника нет в комнате, вернёт False.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+            time_: float (игровое время)
+
+        Returns:
+            bool:
+                True - время добавлено
+                False - не состоит в комнате
+        """
+        room = self.get_room(participant_id)
+        if room:
+            room.add_game_time_participant(participant_id, time_)
+            return True
+        return False
+
+    def get_maze_by_participant_id(self,
+                                   participant_id: Union[int, str]
+                                   ) -> Optional[AbstractMazeGame]:
+        """
+        Возвращает игровой лабиринт для указанного участника.
+
+        Если участника нет в комнате, вернёт None.
+
+        Args:
+            participant_id: Union[int, str] (номер участника)
+
+        Returns:
+            AbstractMazeGame - игровой лабиринт
+            None - участник не найден
+        """
+        room = self._get_room_by_participant(participant_id)
+        if room:
+            return room.maze
+
+    def _get_room_by_participant(self,
+                                 participant_id: Union[int, str]
+                                 ) -> Optional[AbstractRoom]:
+        for room in self._rooms:
+            if room.check_participants(participant_id):
+                return room
